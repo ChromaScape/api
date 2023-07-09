@@ -24,7 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const user = await defaultAuth.getUserByEmail("adrienpringle@gmail.com");
 
-  prisma.user.upsert({
+  const db_user = await prisma.user.upsert({
     where: {
       firebase_uid: user.uid,
     },
@@ -34,7 +34,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   });
 
+
   return res.json({
-    message: `Hello ${name}, ${user.uid}!`,
+    message: `Hello ${name}, ${db_user.firebase_uid}, ${db_user.createdAt}!`,
   })
 }
