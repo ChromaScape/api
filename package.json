@@ -2,6 +2,9 @@
   "repository": "https://github.com/vercel/examples.git",
   "license": "MIT",
   "private": true,
+  "scripts": {
+    "vercel-build": "prisma generate"
+  },
   "devDependencies": {
     "@types/node": "^17.0.45",
     "@vercel/node": "^2.15.3",
