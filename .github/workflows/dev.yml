@@ -1,0 +1,22 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI-DEV
+
+# Controls when the action will run.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy-vercel:
+    runs-on: ubuntu-latest
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      - run: 'npx vercel --token ${{ secrets.VERCEL_TOKEN }} --prod'
+        env:
+          VERCEL_ORG_ID: 5LhvxFl9ee3fvAwGoIFEcVki
+          VERCEL_PROJECT_ID: prj_nlitOQlPrSCXSPU9uZFXBGSaSUdc
