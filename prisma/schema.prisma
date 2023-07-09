@@ -1,0 +1,56 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "cockroachdb"
+  url      = env("DATABASE_URL")
+}
+
+model ScheduledPattern {
+  id           BigInt   @id @default(autoincrement())
+  deviceId     BigInt
+  patternId    BigInt
+  scheduledFor DateTime @db.Timestamp(6)
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+
+  Device  Device  @relation(fields: [deviceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Pattern Pattern @relation(fields: [patternId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Pattern {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt
+  content   String?
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+
+  ScheduledPattern ScheduledPattern[]
+  Device           Device[]
+
+  User User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Device {
+  id          BigInt   @id @default(autoincrement())
+  userId      BigInt
+  patternId   BigInt
+  lightLayout String?
+  createdAt   DateTime @default(now()) @db.Timestamp(6)
+
+  ScheduledPattern ScheduledPattern[]
+
+  User    User    @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Pattern Pattern @relation(fields: [patternId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model User {
+  id           BigInt   @id @default(autoincrement())
+  firebase_uid String   @unique @db.String(255)
+  createdAt    DateTime @default(now()) @db.Timestamp(6)
+
+  Pattern Pattern[]
+  Device  Device[]
+}
