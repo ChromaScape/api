@@ -3,7 +3,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "vercel-build": "prisma generate"
+    "vercel-build": "prisma generate && apidoc -i api -o public/"
   },
   "devDependencies": {
     "@types/node": "^17.0.45",
@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@prisma/client": "^4.16.2",
+    "apidoc": "^1.0.3",
     "express": "^4.18.2",
     "firebase-admin": "^11.9.0"
   }

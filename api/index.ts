@@ -19,10 +19,6 @@ const firebase_app = initializeApp({
 });
 const defaultAuth = getAuth(firebase_app);
 
-enum Role {
-  User,
-  Device
-}
 interface Context {
   uid?: string
   id?: bigint
@@ -107,7 +103,14 @@ async function authorizeDevice(req: Request, res: Response, next: NextFunction) 
 // for now, no handshake. let the device be the sole decider of who does what
 // app.post("/api/user/device", getFirebaseAuth, authorizeUser, async (req, res) => { });
 
-app.delete("/api/user/device", getFirebaseAuth, authorizeUser, async (req, res, next) => {
+
+/**
+ * @api {get} /user/remove_device Detach device from user
+ * @apiGroup User
+ *
+ * @apiBody {bigint} device id to remove
+ */
+app.get("/api/user/remove_device", getFirebaseAuth, authorizeUser, async (req, res, next) => {
   const device_id = req.body.device_id as string | undefined;
   const user_id = req.context.id;
 
@@ -138,10 +141,19 @@ app.delete("/api/user/device", getFirebaseAuth, authorizeUser, async (req, res, 
   } catch (e) {
     return next(e)
   }
-
-
-
 });
+
+/**
+ * @api {post} /user/pattern Create a new pattern
+ * @apiGroup User
+ *
+ * @apiBody {String} content pattern binary data
+ *
+ * @apiSuccess {bigint} id
+ * @apiSuccess {bigint} userId
+ * @apiSuccess {string} content
+ * @apiSuccess {Date} createdAt
+ */
 app.post("/api/user/pattern", getFirebaseAuth, authorizeUser, async (req, res, next) => {
   const content = req.body.content as string | undefined;
   const user_id = req.context.id;
@@ -167,6 +179,12 @@ app.post("/api/user/pattern", getFirebaseAuth, authorizeUser, async (req, res, n
   }
 });
 
+/**
+ * @api {delete} /user/pattern Delete an existing pattern
+ * @apiGroup User
+ *
+ * @apiBody {BigInt} pattern_id
+ */
 app.delete("/api/user/pattern", getFirebaseAuth, authorizeUser, async (req, res, next) => {
   const pattern_id = req.body.pattern_id as string | undefined;
   const user_id = req.context.id;
@@ -198,6 +216,20 @@ app.delete("/api/user/pattern", getFirebaseAuth, authorizeUser, async (req, res,
   }
 });
 
+/**
+ * @api {post} /user/pattern_schedule Create a new pattern
+ * @apiGroup User
+ *
+ * @apiBody {bigint} device_id
+ * @apiBody {bigint} pattern_id
+ * @apiBody {Date} scheduled_time
+ * 
+ * @apiSuccess {bigint} id
+ * @apiSuccess {bigint} deviceId
+ * @apiSuccess {bigint} patternId
+ * @apiSuccess {Date} scheduledFor
+ * @apiSuccess {Date} createdAt
+ */
 app.post("/api/user/pattern_schedule", getFirebaseAuth, authorizeUser, async (req, res, next) => {
   const device_id = req.body.device_id as string | undefined;
   const pattern_id = req.body.pattern_id as string | undefined;
@@ -246,6 +278,13 @@ app.post("/api/user/pattern_schedule", getFirebaseAuth, authorizeUser, async (re
     return next(e)
   }
 });
+
+/**
+ * @api {delete} /user/pattern_schedule Delete an existing scheduled pattern
+ * @apiGroup User
+ *
+ * @apiBody {BigInt} sheduled_pattern_id
+ */
 app.delete("/api/user/pattern_schedule", getFirebaseAuth, authorizeUser, async (req, res, next) => {
   const scheduled_pattern_id = req.body.scheduled_pattern_id as string | undefined;
   const user_id = req.context.id;
@@ -275,7 +314,14 @@ app.delete("/api/user/pattern_schedule", getFirebaseAuth, authorizeUser, async (
 
 
 // device apis
-app.post("/api/device/user", getFirebaseAuth, authorizeDevice, async (req, res, next) => {
+
+/**
+ * @api {patch} /device/user Pair device with a user
+ * @apiGroup Device
+ *
+ * @apiBody {bigint} user_id
+ */
+app.patch("/api/device/user", getFirebaseAuth, authorizeDevice, async (req, res, next) => {
   const user_id = req.body.user_id as string | undefined;
   const device_id = req.context.id;
 
@@ -310,6 +356,15 @@ app.post("/api/device/user", getFirebaseAuth, authorizeDevice, async (req, res, 
 
 
 // global apis
+
+/**
+ * @api {get} /user Get currently logged in user
+ * @apiGroup User
+ * 
+ * @apiSuccess {bigint} id
+ * @apiSuccess {String} firebase_uid
+ * @apiSuccess {Date} createdAt
+ */
 app.get("/api/user", getFirebaseAuth, async (req, res, next) => {
 
   const uid = req.context.uid;
@@ -331,6 +386,17 @@ app.get("/api/user", getFirebaseAuth, async (req, res, next) => {
   }
 });
 
+/**
+ * @api {get} /device Get currently logged in device
+ * @apiGroup Device
+ * 
+ * @apiSuccess {bigint} id
+ * @apiSuccess {String} firebase_uid
+ * @apiSuccess {bigint} userId?
+ * @apiSuccess {bigint} patternId?
+ * @apiSuccess {String} lightLayout?
+ * @apiSuccess {Date} createdAt
+ */
 app.get("/api/device", getFirebaseAuth, async (req, res, next) => {
   const uid = req.context.uid;
   if (!uid) {
@@ -351,7 +417,14 @@ app.get("/api/device", getFirebaseAuth, async (req, res, next) => {
   }
 });
 
-
+/**
+ * @api {post} /user Create a new user
+ * @apiGroup User
+ * 
+ * @apiSuccess {bigint} id
+ * @apiSuccess {String} firebase_uid
+ * @apiSuccess {Date} createdAt
+ */
 app.post("/api/user", getFirebaseAuth, async (req, res, next) => {
   const uid = req.context.uid;
   if (!uid) {
@@ -373,6 +446,18 @@ app.post("/api/user", getFirebaseAuth, async (req, res, next) => {
   }
 });
 
+
+/**
+ * @api {get} /user/pattern/:pattern_id Get a pattern by id
+ * @apiGroup Global
+ * 
+ * @apiParam {bigint} pattern_id pattern binary data
+ *
+ * @apiSuccess {bigint} id
+ * @apiSuccess {bigint} userId
+ * @apiSuccess {string} content
+ * @apiSuccess {Date} createdAt
+ */
 app.get("/api/pattern/:pattern_id", async (req, res, next) => {
   try {
     const id = BigInt(req.params.pattern_id);
@@ -390,6 +475,10 @@ app.get("/api/pattern/:pattern_id", async (req, res, next) => {
 
 });
 
+
+/**
+ *  {get} /hello helloworld example to get started
+ */
 app.get("/api/hello", async (req, res) => {
   const { name = 'World' } = req.query
 
