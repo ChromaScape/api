@@ -36,15 +36,15 @@ model Pattern {
 model Device {
   id           BigInt   @id @default(autoincrement())
   firebase_uid String   @unique @db.String(255)
-  userId       BigInt
-  patternId    BigInt
+  userId       BigInt?
+  patternId    BigInt?
   lightLayout  String?
   createdAt    DateTime @default(now()) @db.Timestamp(6)
 
   ScheduledPattern ScheduledPattern[]
 
-  User    User    @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  Pattern Pattern @relation(fields: [patternId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  User    User?    @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Pattern Pattern? @relation(fields: [patternId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model User {
