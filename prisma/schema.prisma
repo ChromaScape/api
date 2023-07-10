@@ -15,7 +15,7 @@ model ScheduledPattern {
   deviceId     BigInt
   patternId    BigInt
   scheduledFor DateTime @db.Timestamp(6)
-  createdAt DateTime @default(now()) @db.Timestamp(6)
+  createdAt    DateTime @default(now()) @db.Timestamp(6)
 
   Device  Device  @relation(fields: [deviceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   Pattern Pattern @relation(fields: [patternId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -34,11 +34,12 @@ model Pattern {
 }
 
 model Device {
-  id          BigInt   @id @default(autoincrement())
-  userId      BigInt
-  patternId   BigInt
-  lightLayout String?
-  createdAt   DateTime @default(now()) @db.Timestamp(6)
+  id           BigInt   @id @default(autoincrement())
+  firebase_uid String   @unique @db.String(255)
+  userId       BigInt
+  patternId    BigInt
+  lightLayout  String?
+  createdAt    DateTime @default(now()) @db.Timestamp(6)
 
   ScheduledPattern ScheduledPattern[]
 
