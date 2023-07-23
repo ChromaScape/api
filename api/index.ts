@@ -457,6 +457,36 @@ app.post("/api/user", getFirebaseAuth, async (req, res, next) => {
 
 
 /**
+ * @api {post} /device Create a new device
+ * @apiGroup Device
+ * 
+ * @apiSuccess {bigint} id
+ * @apiSuccess {String} firebase_uid
+ * @apiSuccess {Date} createdAt
+ */
+app.post("/api/device", getFirebaseAuth, async (req, res, next) => {
+  const uid = req.context.uid;
+  if (!uid) {
+    const err = new Error('No uid found??');
+    res.status(500);
+    return next(err);
+  }
+
+  try {
+    const new_device = await prisma.device.create({
+      data: {
+        firebase_uid: uid
+      }
+    });
+
+    return res.json(new_device);
+  } catch (e) {
+    next(e)
+  }
+});
+
+
+/**
  * @api {get} /user/pattern/:pattern_id Get a pattern by id
  * @apiGroup Global
  * 
