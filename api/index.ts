@@ -4,6 +4,10 @@ import admin from "firebase-admin";
 import { initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 
+//lmfao dont mind this abomination
+(BigInt.prototype as any).toJSON = function() { return this.toString() }
+
+
 const app = express();
 
 // prisma
@@ -38,11 +42,15 @@ async function getFirebaseAuth(req: Request, res: Response, next: NextFunction) 
   if (auth_header) {
     try {
       const decoded_token = await defaultAuth.verifyIdToken(auth_header);
+      if(!req.context){req.context = {}}
       req.context.uid = decoded_token.uid;
       return next();
-    } catch (e) { }
-  }
+    } catch (e) { 
 
+      //todo remove in prod
+      console.error(e);
+    }
+  }
   const err = new Error('Not authorized!');
   res.status(401);
   return next(err);
@@ -59,6 +67,7 @@ async function authorizeUser(req: Request, res: Response, next: NextFunction) {
         }
       })
 
+      if(!req.context){req.context = {}}
       req.context.uid = uid;
       req.context.id = potential_user.id;
       return next();
@@ -501,3 +510,8 @@ app.get("/api/hello", async (req, res) => {
 });
 
 module.exports = app;
+
+// // add to run locally
+// app.listen(8080, () => {
+//   console.log(`Example app listening on port ${8080}`)
+// })
