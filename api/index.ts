@@ -9,6 +9,8 @@ import { getAuth } from 'firebase-admin/auth';
 
 
 const app = express();
+app.use(express.json())
+
 
 // prisma
 const prisma = new PrismaClient();
@@ -112,7 +114,89 @@ async function authorizeDevice(req: Request, res: Response, next: NextFunction) 
 // for now, no handshake. let the device be the sole decider of who does what
 // app.post("/api/user/device", getFirebaseAuth, authorizeUser, async (req, res) => { });
 
+/**
+ * @api {get} /user/devices View all paired devices
+ * @apiGroup User
+ *
+ * @apiSuccess {bigint} id
+ * @apiSuccess {String} firebase_uid
+ * @apiSuccess {bigint} userId?
+ * @apiSuccess {bigint} patternId?
+ * @apiSuccess {String} lightLayout?
+ * @apiSuccess {Date} createdAt
+*/
+app.get("/api/user/devices", getFirebaseAuth, authorizeUser, async (req, res, next) => {
+  const user_id = req.context.id;
 
+  if (!user_id) {
+    const err = new Error('no user id somehow');
+    res.status(400);
+    return next(err);
+  }
+
+  try {
+    const devices = await prisma.device.findMany({
+      where: {
+        userId: user_id
+      }
+    })
+
+
+    return res.json(devices);
+
+  } catch (e) {
+    return next(e)
+  }
+});
+
+/**
+ * @api {post} /user/device_pattern Set device pattern
+ * @apiGroup User
+ *
+ * @apiBody {bigint} device_id device id
+ * @apiBody {bigint} pattern_id pattern id
+*/
+app.post("/api/user/device_pattern", getFirebaseAuth, authorizeUser, async (req, res, next) => {
+  const user_id = req.context.id;
+  const device_id = req.body.device_id as string | undefined;
+  const pattern_id = req.body.pattern_id as string | undefined;
+
+
+  if (!user_id) {
+    const err = new Error('no user id somehow');
+    res.status(400);
+    return next(err);
+  }
+
+  if (!device_id || !pattern_id) {
+    const err = new Error('body incorrect \n' + JSON.stringify(req.body));
+    res.status(400);
+    return next(err);
+  }
+
+  try {
+    const devices = await prisma.device.updateMany({
+      where: {
+        userId: user_id,
+        id: BigInt(device_id)
+      },
+      data: {
+        patternId: BigInt(pattern_id)
+      }
+    })
+
+    if (devices.count == 0){
+      const err = new Error('no update');
+      res.status(400);
+      return next(err);
+    }
+
+    return res.json(devices);
+
+  } catch (e) {
+    return next(e)
+  }
+});
 /**
  * @api {get} /user/remove_device Detach device from user
  * @apiGroup User
@@ -151,7 +235,37 @@ app.get("/api/user/remove_device", getFirebaseAuth, authorizeUser, async (req, r
     return next(e)
   }
 });
+/**
+ * @api {get} /user/patterns Get all user patterns
+ * @apiGroup User
+ * 
+ * @apiSuccess {bigint} id
+ * @apiSuccess {bigint} userId
+ * @apiSuccess {string} content
+ * @apiSuccess {Date} createdAt
+ */
+app.get("/api/user/patterns", getFirebaseAuth, authorizeUser, async (req, res, next) => {
+  const user_id = req.context.id;
 
+  if (!user_id) {
+    const err = new Error('no uid found??');
+    res.status(500);
+    return next(err);
+  }
+
+  try {
+    const patterns = await prisma.pattern.findMany({
+      where: {
+        userId: user_id
+      }
+    });
+
+
+    return res.json(patterns);
+  } catch (e) {
+    return next(e);
+  }
+});
 /**
  * @api {post} /user/pattern Create a new pattern
  * @apiGroup User
